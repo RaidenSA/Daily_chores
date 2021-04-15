@@ -5,26 +5,40 @@ Used is database.py
 """
 
 CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
-                   username VARCHAR PRIMARY KEY,
-                   password VARCHAR NOT NULL)"""
+                      username VARCHAR PRIMARY KEY,
+                      password VARCHAR NOT NULL)"""
 
 CREATE_NOTES = """CREATE TABLE IF NOT EXISTS notes(
                       uuid VARCHAR PRIMARY KEY,
                       user VARCHAR NOT NULL,
                       ctime INT NOT NULL,
                       atime INT NOT NULL,
-                      date INT NOT NULL,
                       text VARCHAR NOT NULL)"""
 
-SELECT_USER  = "SELECT * FROM users WHERE username=?"
-INSERT_USER  = "INSERT INTO users VALUES (?, ?)"
+CREATE_TELEGRAM = """CREATE TABLE IF NOT EXISTS telegram(
+                         telegram INT PRIMARY KEY,
+                         username VARCHAR NOT NULL)"""
+
+SELECT_USER = "SELECT * FROM users WHERE username=?"
+INSERT_USER = "INSERT INTO users VALUES (?, ?)"
+UPDATE_USER = """UPDATE users SET
+                     password=?
+                     WHERE username=?"""
+
+SELECT_TELEGRAM = "SELECT * FROM telegram WHERE telegram=?"
+INSERT_TELEGRAM = "INSERT INTO telegram VALUES (?, ?)"
+DELETE_TELEGRAM = "DELETE FROM telegram WHERE telegram=?"
+UPDATE_TELEGRAM = """UPDATE telegram SET
+                         username=?
+                         WHERE telegram=?"""
+
 SELECT_NOTE  = "SELECT * FROM notes WHERE uuid=?"
 SELECT_NOTES = "SELECT * FROM notes WHERE user=? LIMIT ? OFFSET ?"
-INSERT_NOTE  = "INSERT INTO notes VALUES (?,?,?,?,?,?)"
+INSERT_NOTE  = "INSERT INTO notes VALUES (?,?,?,?,?)"
+DELETE_NOTE  = "DELETE FROM notes WHERE uuid=?"
 UPDATE_NOTE  = """UPDATE notes SET
-                     user=?,
-                     ctime=?,
-                     atime=?,
-                     date=?,
-                     text=?
-                     WHERE uuid=?"""
+                      user=?,
+                      ctime=?,
+                      atime=?,
+                      text=?
+                      WHERE uuid=?"""

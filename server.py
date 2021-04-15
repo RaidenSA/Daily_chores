@@ -9,6 +9,7 @@ Validates game state
 
 
 import sqlite3
+from multiprocessing import Process
 from time import time
 from uuid import uuid1
 
@@ -17,21 +18,10 @@ from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import database
-db_name = "db/mydatabase.db"
+import properties
 
 APP = Flask(__name__)
 AUTH = HTTPBasicAuth()
-database.init(sqlite3.connect(db_name))
-
-
-def dict_factory(cursor, row):
-    """Return DB tuple as dict"""
-
-    res = {}
-    for idx, col in enumerate(cursor.description):
-        res[col[0]] = row[idx]
-
-    return res
 
 
 def conn_get():
@@ -39,8 +29,8 @@ def conn_get():
 
     conn = getattr(g, '_database', None)
     if conn is None:
-        conn = g._database = sqlite3.connect(db_name)
-        conn.row_factory = dict_factory
+        conn = g._database = sqlite3.connect(properties.db_name)
+        conn.row_factory = database.dict_factory
 
     return conn
 
@@ -113,6 +103,7 @@ def health_check():
     Api.health_check method
     returns status "ok" or fails
     """
+
     return jsonify({"status": "ok"})
 
 
@@ -131,7 +122,7 @@ def authenticate():
     return ""
 
 
-@APP.route('/api/v1/auth', methods=['POST'])
+@APP.route('/api/v1/auth', methods=['PUT'])
 def register():
     """
     Api.register method
@@ -146,6 +137,9 @@ def register():
     if not request.json \
             or not 'username' in request.json or len(request.json['username']) == 0 \
             or not 'password' in request.json or len(request.json['password']) == 0:
+        abort(400)
+
+    if not request.json['username'].isalnum() or not request.json['password'].isalnum():
         abort(400)
 
     conn = conn_get()
@@ -163,13 +157,41 @@ def register():
     return "", 201
 
 
+@APP.route('/api/v1/auth', methods=['POST'])
+@AUTH.login_required
+def change_password():
+    """
+    Api.change_password method
+    arguments: [password]
+    returns: empty body
+    200 -- password changed
+    400 -- wrong arguments
+    409 -- username exists
+    500 -- internal error
+    """
+
+    if not request.json or not 'password' in request.json or len(request.json['password']) == 0:
+        abort(400)
+
+    if not request.json['password'].isalnum():
+        abort(400)
+
+    conn = conn_get()
+    user = database.get_user(conn, AUTH.username())
+    user['password'] = generate_password_hash(request.json['password'])
+    database.update_user(conn, user)
+    conn.commit()
+
+    return ""
+
+
 @APP.route('/api/v1/note', methods=['PUT'])
 @AUTH.login_required
 def create_note():
     """
     Api.create_note method
     arguments: [payload]
-    returns: [uuid, user, ctime, atime, text, date]
+    returns: [uuid, user, ctime, atime, text]
     201 -- note created
     400 -- wrong arguments
     403 -- wrong authorization
@@ -179,16 +201,12 @@ def create_note():
     if not request.json or not 'text' in request.json:
         abort(400)
 
-    if not 'date' in request.json:
-        request.json["date"] = "0"
-
     conn = conn_get()
     note = {
         'uuid':  str(uuid1()),
         'user':  AUTH.username(),
         'ctime': int(time()),
         'atime': int(time()),
-        'date':  int(request.json["date"]),
 	'text':  request.json["text"]
     }
     database.add_note(conn, note)
@@ -197,14 +215,32 @@ def create_note():
     return jsonify(note), 201
 
 
+@APP.route('/api/v1/note', methods=['GET'])
+@AUTH.login_required
+def get_notes():
+    """
+    Api.get_notes method
+    returns: [[uuid, user, ctime, atime, text]]
+    200 -- ok
+    400 -- wrong arguments
+    403 -- wrong authorization
+    500 -- internal error
+    """
+
+    conn = conn_get()
+    notes = database.get_notes(conn, AUTH.username(), 20, 0)
+    conn.commit()
+
+    return jsonify(notes)
+
+
 @APP.route('/api/v1/note/<string:uuid>', methods=['GET'])
 @AUTH.login_required
 def get_note(uuid):
     """
     Api.get_note method
-    returns: [uuid, user, ctime, atime, text, date]
+    returns: [uuid, user, ctime, atime, text]
     200 -- ok
-    400 -- wrong arguments
     403 -- wrong authorization
     404 -- note not found
     500 -- internal error
@@ -225,9 +261,8 @@ def get_note(uuid):
 @AUTH.login_required
 def update_note(uuid):
     """
-    Api.make_move method
-    arguments: [hash, round, payload]
-    returns: empty body
+    Api.update_note method
+    returns: [uuid, user, ctime, atime, text]
     200 -- note updated
     400 -- wrong arguments
     403 -- wrong authorization
@@ -243,17 +278,43 @@ def update_note(uuid):
     if AUTH.username() != note["user"]:
         abort(403)
 
-    note["atime"] = int(time())
-    if request.json and 'text' in request.json:
-        note["text"] = request.json["text"]
-    if request.json and 'date' in request.json:
-        note["date"] = int(request.json["date"])
+    if not request.json or not 'text' in request.json:
+        abort(400)
 
+    note["atime"] = int(time())
+    note["text"] = request.json["text"]
     database.update_note(conn, note)
     conn.commit()
 
     return jsonify(note)
 
 
+@APP.route('/api/v1/note/<string:uuid>', methods=['DELETE'])
+@AUTH.login_required
+def delete_note(uuid):
+    """
+    Api.update_note method
+    returns: empty body
+    204 -- note deleted
+    403 -- wrong authorization
+    404 -- note not found
+    500 -- internal error
+    """
+
+    conn = conn_get()
+    note = database.get_note(conn, uuid)
+    if note is None:
+        abort(404)
+
+    if AUTH.username() != note["user"]:
+        abort(403)
+
+    database.delete_note(conn, note["uuid"])
+    conn.commit()
+
+    return jsonify(note), 204
+
+
 if __name__ == '__main__':
+    database.init(sqlite3.connect(properties.db_name))
     APP.run(debug=False)

@@ -6,6 +6,15 @@ Used in server.py
 
 import sql
 
+def dict_factory(cursor, row):
+    """Return DB tuple as dict"""
+
+    res = {}
+    for idx, col in enumerate(cursor.description):
+        res[col[0]] = row[idx]
+
+    return res
+
 
 def init(conn):
     """"Initializes DB state"""
@@ -13,6 +22,7 @@ def init(conn):
     cursor = conn.cursor()
     cursor.execute(sql.CREATE_USERS)
     cursor.execute(sql.CREATE_NOTES)
+    cursor.execute(sql.CREATE_TELEGRAM)
     conn.commit()
     conn.close()
 
@@ -32,6 +42,48 @@ def add_user(conn, user):
     cursor.execute(sql.INSERT_USER, (user['username'], user['password']))
 
 
+def update_user(conn, user):
+    """update existing user"""
+
+    cursor = conn.cursor()
+    cursor.execute(sql.UPDATE_USER, (
+        user['password'],
+        user['username']
+    ))
+
+
+def get_telegram(conn, telegram):
+    """get username by telegram"""
+
+    cursor = conn.cursor()
+    cursor.execute(sql.SELECT_TELEGRAM, (telegram,))
+    return cursor.fetchone()
+
+
+def add_telegram(conn, telegram):
+    """add telegram username link"""
+
+    cursor = conn.cursor()
+    cursor.execute(sql.INSERT_TELEGRAM, (telegram['telegram'], telegram['username']))
+
+
+def update_telegram(conn, telegram):
+    """update existing telegram username link"""
+
+    cursor = conn.cursor()
+    cursor.execute(sql.UPDATE_TELEGRAM, (
+        telegram['username'],
+        telegram['telegram']
+    ))
+
+
+def delete_telegram(conn, telegram):
+    """delete existing telegram username link"""
+
+    cursor = conn.cursor()
+    cursor.execute(sql.DELETE_TELEGRAM, (telegram,))
+
+
 def get_note(conn, uuid):
     """get note by uuid"""
 
@@ -43,11 +95,11 @@ def get_note(conn, uuid):
 
     return note
 
-def get_notes(conn, username):
+def get_notes(conn, username, limit, offset):
     """get notes by username"""
 
     cursor = conn.cursor()
-    cursor.execute(sql.SELECT_NOTES, (username,))
+    cursor.execute(sql.SELECT_NOTES, (username, limit, offset))
     notes = cursor.fetchall()
     if notes is None:
         return None
@@ -63,7 +115,6 @@ def add_note(conn, note):
         note['user'],
         note['ctime'],
         note['atime'],
-        note['date'],
         note['text']
     ))
 
@@ -76,7 +127,13 @@ def update_note(conn, note):
         note['user'],
         note['ctime'],
         note['atime'],
-        note['date'],
         note['text'],
         note['uuid']
     ))
+
+
+def delete_note(conn, uuid):
+    """delete existing note"""
+
+    cursor = conn.cursor()
+    cursor.execute(sql.DELETE_NOTE, (uuid,))
