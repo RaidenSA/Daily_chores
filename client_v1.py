@@ -32,38 +32,29 @@ def new_note(username,password,text):
     response = requests.put(destination, headers=headers,auth=(username, password), data=data)
     return response
 
-def get_notes(username,password):
+def get_notes(username, password):
     prefix = '/api/v1/note'
     destination = address + prefix
     response = requests.get(destination, headers=headers,auth=(username, password))
     return response # this one needs huge parsing. Nevertheless, they all need it
 
+def update_note(username, password, id, text):
+    prefix = '/api/v1/note'
+    destination = address + prefix + '/' + str(id)
+    data = '{{"text":"{0}"}}'.format(text)  # may be it is called payload
+    response = requests.post(destination, headers=headers, auth=(username, password), data=data)
+    return response
+
+def get_note(username, password, id):
+    prefix = '/api/v1/note'
+    destination = address + prefix + '/' + str(id)
+    response = requests.get(destination, headers=headers, auth=(username, password))
+    return response
+
+def delete_note(username, password, id):
+    prefix = '/api/v1/note'
+    destination = address + prefix + '/' + str(id)
+    response = requests.delete(destination, headers=headers, auth=(username, password))
+    return response
+#returns empty + code
 # current users: SS:P,K:P,T:P,L:P
-auth_flag =1
-reg_flag =0
-while auth_flag:
-    print("type in user or word 'registration' ")
-    user =input()
-    if user == 'registration':
-        print('You have chosen to register')
-        print('type in username')
-        user = input()
-        reg_flag = 1
-    print("type in password")
-    password = input()
-    if reg_flag:
-        response = register(user,password)
-        if response.status_code==201:
-            print('registration successful')
-            auth_flag = 0
-            reg_flag=0
-        else:
-            print('something went wrong, please try again')
-            reg_flag =0
-    else:
-        response = log_in(user,password)
-        if response.status_code == 200:
-            auth_flag = 0
-        else:
-            print("error, try again")
-print('Yes, you are in!')
