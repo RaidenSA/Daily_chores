@@ -41,7 +41,8 @@ def get_notes(username, password):
 def update_note(username, password, id, text):
     prefix = '/api/v1/note'
     destination = address + prefix + '/' + str(id)
-    data = '{{"text":"{0}"}}'.format(text)  # may be it is called payload
+    data = '{{"text":"{0}"}}'.format(text)
+    #print(data)# may be it is called payload
     response = requests.post(destination, headers=headers, auth=(username, password), data=data)
     return response
 
