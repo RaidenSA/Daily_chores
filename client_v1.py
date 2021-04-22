@@ -41,10 +41,10 @@ def get_notes(username, password):
 def update_note(username, password, id, text):
     prefix = '/api/v1/note'
     destination = address + prefix + '/' + str(id)
-    data = '{{"text":"{0}"}}'.format(text)
     #print(data)# may be it is called payload
-    response = requests.post(destination, headers=headers, auth=(username, password), data=data)
+    response = requests.post(destination, headers=headers, auth=(username, password), json={'text':text})
     return response
+#print(requests.put('http://127.0.0.1:5000/api/v1/note', json={'text':a}, auth = ("max", "123"), headers = {}).json()["text"])
 
 def get_note(username, password, id):
     prefix = '/api/v1/note'
