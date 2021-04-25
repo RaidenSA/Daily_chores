@@ -207,7 +207,7 @@ def create_note():
         'user':  AUTH.username(),
         'ctime': int(time()),
         'atime': int(time()),
-	'text':  request.json["text"]
+        'text':  request.json["text"]
     }
     database.add_note(conn, note)
     conn.commit()

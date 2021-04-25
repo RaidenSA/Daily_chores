@@ -1,13 +1,14 @@
 from tkinter import *
 from tkinter import ttk
 import requests
-from client_v1 import register,log_in,get_notes,new_note,pass_change, update_note,delete_note
+import client_v1
+
 #user =""
 #password =""
 notes ={}
 # need to catch connection troubles
 def load_all():
-    response = get_notes(user_txt.get(), pass_txt.get())
+    response = client_v1.get_notes(user_txt.get(), pass_txt.get())
     if response.status_code == 200:
         for ind in response.json():
             uuid = ind['uuid']
@@ -30,7 +31,7 @@ def show_note(event):
 def auth_click():
     user = user_txt.get()
     password = pass_txt.get()
-    response = log_in(user, password)
+    response = client_v1.log_in(user, password)
     if response.status_code == 403:
         auth_lbl.configure(text = "Неверный логин или пароль")
         user_txt.configure(text ="")
@@ -62,7 +63,7 @@ def auth_click():
 def reg_click():
     user = user_txt.get()
     password = pass_txt.get()
-    response = register(user, password)
+    response = client_v1.register(user, password)
     if response.status_code == 409:
         auth_lbl.configure(text="Пользователь с таким именем уже существует")
     elif response.status_code == 500:
@@ -91,7 +92,7 @@ def reg_click():
 def new_note_click():
     user = user_txt.get()
     password = pass_txt.get()
-    response = new_note(user,password,"")
+    response = client_v1.new_note(user,password,"")
     if response.status_code == 201:
         uuid = response.json()['uuid']
         text = response.json()['text']
@@ -108,7 +109,7 @@ def save_changes_click():
     selected = note_control.get(index) #cause of uuid
     text = note_text.get(1.0, 'end-1c') # it doesn't like end of line at all
     #print(text)
-    response = update_note(user,password,selected,text)
+    response = client_v1.update_note(user,password,selected,text)
     if response.status_code == 200:
         notes[selected] = text
     #status code chek
@@ -120,7 +121,7 @@ def delete_click():
     if not index:
         index = 0
     selected = note_control.get(index)
-    response = delete_note(user,password,selected)
+    response = client_v1.delete_note(user,password,selected)
     if response.status_code == 204:
         del notes[selected]
         note_text.delete(1.0, END)
