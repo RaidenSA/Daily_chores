@@ -190,15 +190,15 @@ def change_password():
 def create_note():
     """
     Api.create_note method
-    arguments: [text]
-    returns: [uuid, user, ctime, atime, text]
+    arguments: [title, text]
+    returns: [uuid, user, ctime, atime, title, text]
     201 -- note created
     400 -- wrong arguments
     403 -- wrong authorization
     500 -- internal error
     """
 
-    if not request.json or not 'text' in request.json:
+    if not request.json or not 'text' in request.json or not 'title' in request.json:
         abort(400)
 
     conn = conn_get()
@@ -207,6 +207,7 @@ def create_note():
         'user':  AUTH.username(),
         'ctime': int(time()),
         'atime': int(time()),
+        'title': request.json["title"],
         'text':  request.json["text"]
     }
     database.add_note(conn, note)
@@ -220,15 +221,24 @@ def create_note():
 def get_notes():
     """
     Api.get_notes method
-    returns: [[uuid, user, ctime, atime, text]]
+    arguments: [limit, offset]
+    returns: [[uuid, user, ctime, atime, title, text]]
     200 -- ok
     400 -- wrong arguments
     403 -- wrong authorization
     500 -- internal error
     """
 
+    limit = int(request.args.get('limit'))
+    if limit is None or limit < 0 or limit > 100:
+        limit = 50
+
+    offset = int(request.args.get('offset'))
+    if offset is None or offset < 0:
+        offset = 0
+
     conn = conn_get()
-    notes = database.get_notes(conn, AUTH.username(), 20, 0)
+    notes = database.get_notes(conn, AUTH.username(), limit, offset)
     conn.commit()
 
     return jsonify(notes)
@@ -239,7 +249,7 @@ def get_notes():
 def get_note(uuid):
     """
     Api.get_note method
-    returns: [uuid, user, ctime, atime, text]
+    returns: [uuid, user, ctime, atime, title, text]
     200 -- ok
     403 -- wrong authorization
     404 -- note not found
@@ -262,7 +272,8 @@ def get_note(uuid):
 def update_note(uuid):
     """
     Api.update_note method
-    returns: [uuid, user, ctime, atime, text]
+    arguments: [title, text]
+    returns: [uuid, user, ctime, atime, title, text]
     200 -- note updated
     400 -- wrong arguments
     403 -- wrong authorization
@@ -278,10 +289,11 @@ def update_note(uuid):
     if AUTH.username() != note["user"]:
         abort(403)
 
-    if not request.json or not 'text' in request.json:
+    if not request.json or not 'text' in request.json or not 'title' in request.json:
         abort(400)
 
     note["atime"] = int(time())
+    note["title"] = request.json["title"]
     note["text"] = request.json["text"]
     database.update_note(conn, note)
     conn.commit()

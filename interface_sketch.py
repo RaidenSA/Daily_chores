@@ -92,7 +92,7 @@ def reg_click():
 def new_note_click():
     user = user_txt.get()
     password = pass_txt.get()
-    response = client_v1.new_note(user,password,"")
+    response = client_v1.new_note(user,password,"","")
     if response.status_code == 201:
         uuid = response.json()['uuid']
         text = response.json()['text']
@@ -109,7 +109,7 @@ def save_changes_click():
     selected = note_control.get(index) #cause of uuid
     text = note_text.get(1.0, 'end-1c') # it doesn't like end of line at all
     #print(text)
-    response = client_v1.update_note(user,password,selected,text)
+    response = client_v1.update_note(user,password,selected,"",text)
     if response.status_code == 200:
         notes[selected] = text
     #status code chek

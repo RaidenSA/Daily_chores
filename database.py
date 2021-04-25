@@ -115,6 +115,7 @@ def add_note(conn, note):
         note['user'],
         note['ctime'],
         note['atime'],
+        note['title'],
         note['text']
     ))
 
@@ -127,6 +128,7 @@ def update_note(conn, note):
         note['user'],
         note['ctime'],
         note['atime'],
+        note['title'],
         note['text'],
         note['uuid']
     ))

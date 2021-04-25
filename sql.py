@@ -13,6 +13,7 @@ CREATE_NOTES = """CREATE TABLE IF NOT EXISTS notes(
                       user VARCHAR NOT NULL,
                       ctime INT NOT NULL,
                       atime INT NOT NULL,
+                      title VARCHAR NOT NULL,
                       text VARCHAR NOT NULL)"""
 
 CREATE_TELEGRAM = """CREATE TABLE IF NOT EXISTS telegram(
@@ -34,11 +35,12 @@ UPDATE_TELEGRAM = """UPDATE telegram SET
 
 SELECT_NOTE  = "SELECT * FROM notes WHERE uuid=?"
 SELECT_NOTES = "SELECT * FROM notes WHERE user=? LIMIT ? OFFSET ?"
-INSERT_NOTE  = "INSERT INTO notes VALUES (?,?,?,?,?)"
+INSERT_NOTE  = "INSERT INTO notes VALUES (?,?,?,?,?,?)"
 DELETE_NOTE  = "DELETE FROM notes WHERE uuid=?"
 UPDATE_NOTE  = """UPDATE notes SET
                       user=?,
                       ctime=?,
                       atime=?,
+                      title=?,
                       text=?
                       WHERE uuid=?"""
