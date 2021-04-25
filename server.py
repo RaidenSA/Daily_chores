@@ -166,7 +166,7 @@ def change_password():
     returns: empty body
     200 -- password changed
     400 -- wrong arguments
-    409 -- username exists
+    403 -- wrong authorization
     500 -- internal error
     """
 
@@ -190,7 +190,7 @@ def change_password():
 def create_note():
     """
     Api.create_note method
-    arguments: [payload]
+    arguments: [text]
     returns: [uuid, user, ctime, atime, text]
     201 -- note created
     400 -- wrong arguments
@@ -207,7 +207,7 @@ def create_note():
         'user':  AUTH.username(),
         'ctime': int(time()),
         'atime': int(time()),
-	'text':  request.json["text"]
+        'text':  request.json["text"]
     }
     database.add_note(conn, note)
     conn.commit()
@@ -312,7 +312,7 @@ def delete_note(uuid):
     database.delete_note(conn, note["uuid"])
     conn.commit()
 
-    return jsonify(note), 204
+    return "", 204
 
 
 if __name__ == '__main__':
