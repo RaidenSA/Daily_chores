@@ -133,10 +133,7 @@ def register():
     409 -- username exists
     500 -- internal error
     """
-    #print("hello")
-    #print(request.json['username'])
-    #for v in request.json:
-    #    print(v, request.json[v])
+
     if not request.json \
             or not 'username' in request.json or len(request.json['username']) == 0 \
             or not 'password' in request.json or len(request.json['password']) == 0:
@@ -169,7 +166,7 @@ def change_password():
     returns: empty body
     200 -- password changed
     400 -- wrong arguments
-    409 -- username exists What is going on here, MAX?
+    403 -- wrong authorization
     500 -- internal error
     """
 
@@ -193,16 +190,16 @@ def change_password():
 def create_note():
     """
     Api.create_note method
-    arguments: [payload]
-    returns: [uuid, user, ctime, atime, text] Why does it return smth? may be we shall just update
-    201 -- note created                 with the other one?
+    arguments: [text]
+    returns: [uuid, user, ctime, atime, text]
+    201 -- note created
     400 -- wrong arguments
     403 -- wrong authorization
     500 -- internal error
     """
 
     if not request.json or not 'text' in request.json:
-        abort(400) # I don't understand whether it is payload or text
+        abort(400)
 
     conn = conn_get()
     note = {
@@ -315,7 +312,7 @@ def delete_note(uuid):
     database.delete_note(conn, note["uuid"])
     conn.commit()
 
-    return jsonify(note), 204
+    return "", 204
 
 
 if __name__ == '__main__':
