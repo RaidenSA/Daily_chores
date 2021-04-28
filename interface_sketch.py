@@ -106,6 +106,7 @@ def pass_change_click():
     status_lbl.configure(text="Введите старый и новый пароль")
 
     note_control.grid_remove()
+
     note_space.grid_remove()
     note_scroll.grid_remove()
     new_note_btn.grid_remove()
